@@ -49,9 +49,20 @@ pipeline {
                 echo "Desplegando en el ambiente: ${TARGET_ENV}"
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
-                    kubectl apply -f manifests/k8s/${TARGET_ENV}/app-python-deployment.yaml
-                    kubectl set image deployment/app-python app-python=local-registry:5000/app-python:${IMAGE_TAG} -n ${TARGET_ENV}
-                    kubectl apply -f manifests/k8s/${TARGET_ENV}/app-python-service.yaml
+
+                    kubectl apply \
+                        --context ${TARGET_ENV} \
+                        -f manifests/k8s/${TARGET_ENV}/app-python-deployment.yaml
+
+                    kubectl set image \
+                        --context ${TARGET_ENV} \
+                        deployment/app-python \
+                        app-python=host.docker.internal:5000/app-python:${IMAGE_TAG} \
+                        -n ${TARGET_ENV}
+
+                    kubectl apply \
+                        --context ${TARGET_ENV} \
+                        -f manifests/k8s/${TARGET_ENV}/app-python-service.yaml
                 '''
             }
         }
