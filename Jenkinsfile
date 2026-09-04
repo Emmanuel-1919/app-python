@@ -1,17 +1,22 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['dev', 'qa', 'prod'],
+            description: 'Ambiente al que se va a desplegar'
+        )
+    }
+
     environment {
-        TARGET_ENV = "${env.BRANCH_NAME == 'develop' ? 'dev' : (env.BRANCH_NAME == 'qa' ? 'qa' : 'prod')}"
+        TARGET_ENV = "${params.DEPLOY_ENV}"
     }
 
     stages {
-
         stage('Test') {
             agent {
-                docker {
-                    image 'python:3.12-slim'
-                }
+                docker { image 'python:3.12-slim' }
             }
             steps {
                 sh '''
@@ -28,8 +33,13 @@ pipeline {
                 echo 'Construyendo imagen Docker...'
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
-                    docker build -t localhost:5000/app-python:${IMAGE_TAG} .
-                    docker push localhost:5000/app-python:${IMAGE_TAG}
+
+                    docker build \
+                        -t localhost:5000/app-python:${IMAGE_TAG} \
+                        .
+
+                    docker push \
+                        localhost:5000/app-python:${IMAGE_TAG}
                 '''
             }
         }
@@ -39,14 +49,16 @@ pipeline {
                 dir('manifests') {
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: "*/${env.BRANCH_NAME}"]],
+                        branches: [[name: '*/main']],
                         userRemoteConfigs: [[
                             url: 'git@github.com:Emmanuel-1919/Devops-cicd.git',
                             credentialsId: 'github-devops-cicd'
                         ]]
                     ])
                 }
+
                 echo "Desplegando en el ambiente: ${TARGET_ENV}"
+
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
 
