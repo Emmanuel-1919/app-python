@@ -29,6 +29,8 @@ def index():
         <p>Rama: {cfg['rama']}</p>
         <p>Commit: {cfg['commit']}</p>
         <p>Versión: {cfg['version']}</p>
+        <p>Implementacion: {cfg['esta app se instalo desde jenkins a minikube']}</p>
+
         <p>Stack: Python + Flask</p>
     </body>
     </html>
