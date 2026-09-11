@@ -48,15 +48,8 @@ pipeline {
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
 
-                    # Build y Tag con Commit ID y Latest
-                    docker build \
-                        -t localhost:5000/app-python:${IMAGE_TAG} \
-                        -t localhost:5000/app-python:latest \
-                        .
-
-                    # Push de ambas etiquetas
+                    docker build -t localhost:5000/app-python:${IMAGE_TAG} .
                     docker push localhost:5000/app-python:${IMAGE_TAG}
-                    docker push localhost:5000/app-python:latest
                 '''
             }
         }
@@ -82,12 +75,10 @@ pipeline {
                 echo "Desplegando en el ambiente: ${TARGET_ENV}"
 
                 sh '''
-                    # Aplicar Manifiestos
                     kubectl apply \
                         --context ${TARGET_ENV} \
                         -f manifests/k8s/${TARGET_ENV}/app-python-deployment.yaml
 
-                    # Actualizar a la imagen con el tag correspondiente
                     kubectl set image \
                         --context ${TARGET_ENV} \
                         deployment/app-python \
@@ -97,9 +88,6 @@ pipeline {
                     kubectl apply \
                         --context ${TARGET_ENV} \
                         -f manifests/k8s/${TARGET_ENV}/app-python-service.yaml
-
-                    # TRUCO: Forzar reinicio para asegurar que baje los últimos cambios si usas latest
-                    kubectl rollout restart deployment/app-python --context ${TARGET_ENV} -n python
 
                     kubectl annotate deployment/app-python \
                         --context ${TARGET_ENV} \
