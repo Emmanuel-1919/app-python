@@ -15,6 +15,10 @@ def get_config():
         "rama": os.environ.get("GIT_BRANCH", "unknown"),
         "commit": os.environ.get("GIT_COMMIT", "unknown")[:7],
         "version": os.environ.get("APP_VERSION", "0.0.1"),
+        # Clave agregada correctamente para evitar el KeyError
+        "mensaje_deploy": os.environ.get(
+            "DEPLOY_MSG", "esta app se instalo desde jenkins a minikube"
+        ),
     }
 
 @app.route("/")
@@ -29,8 +33,7 @@ def index():
         <p>Rama: {cfg['rama']}</p>
         <p>Commit: {cfg['commit']}</p>
         <p>Versión: {cfg['version']}</p>
-        <p>Implementacion: {cfg['esta app se instalo desde jenkins a minikube']}</p>
-
+        <p>Implementacion: {cfg['mensaje_deploy']}</p>
         <p>Stack: Python + Flask</p>
     </body>
     </html>
