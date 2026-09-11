@@ -48,8 +48,15 @@ pipeline {
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
 
-                    docker build -t localhost:5000/app-python:${IMAGE_TAG} .
+                    # Build y Tag con Commit ID y Latest (latest es necesario porque
+                    # los manifiestos de deployment/service arrancan con ese tag)
+                    docker build \
+                        -t localhost:5000/app-python:${IMAGE_TAG} \
+                        -t localhost:5000/app-python:latest \
+                        .
+
                     docker push localhost:5000/app-python:${IMAGE_TAG}
+                    docker push localhost:5000/app-python:latest
                 '''
             }
         }
