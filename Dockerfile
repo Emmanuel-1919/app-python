@@ -7,6 +7,6 @@ COPY requirements.txt .
 RUN pip install -r requirements-dev.txt
 COPY . .
 
-EXPOSE 8080
+EXPOSE 8081
 
 CMD  ["python3","app.py"]
