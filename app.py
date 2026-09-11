@@ -14,7 +14,7 @@ def get_config():
         "ambiente": os.environ.get("APP_ENV", "dev"),
         "rama": os.environ.get("GIT_BRANCH", "unknown"),
         "commit": os.environ.get("GIT_COMMIT", "unknown")[:7],
-        "version": os.environ.get("APP_VERSION", "0.0.1"),
+        "version": os.environ.get("APP_VERSION", "0.0.2"),
         # Clave agregada correctamente para evitar el KeyError
         "mensaje_deploy": os.environ.get(
             "DEPLOY_MSG", "esta app se instalo desde jenkins a minikube"
