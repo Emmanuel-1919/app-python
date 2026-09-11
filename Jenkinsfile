@@ -48,18 +48,26 @@ pipeline {
                 sh '''
                     IMAGE_TAG=$(git rev-parse --short HEAD)
 
+                    # Build y Tag con Commit ID y Latest
                     docker build \
                         -t localhost:5000/app-python:${IMAGE_TAG} \
+                        -t localhost:5000/app-python:latest \
                         .
 
-                    docker push \
-                        localhost:5000/app-python:${IMAGE_TAG}
+                    # Push de ambas etiquetas
+                    docker push localhost:5000/app-python:${IMAGE_TAG}
+                    docker push localhost:5000/app-python:latest
                 '''
             }
         }
 
         stage('Deploy') {
             steps {
+                script {
+                    // Guardamos el hash de la app ANTES de cambiar de repo
+                    env.APP_COMMIT_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                }
+
                 dir('manifests') {
                     checkout([
                         $class: 'GitSCM',
@@ -74,26 +82,29 @@ pipeline {
                 echo "Desplegando en el ambiente: ${TARGET_ENV}"
 
                 sh '''
-                    IMAGE_TAG=$(git rev-parse --short HEAD)
-
+                    # Aplicar Manifiestos
                     kubectl apply \
                         --context ${TARGET_ENV} \
                         -f manifests/k8s/${TARGET_ENV}/app-python-deployment.yaml
 
+                    # Actualizar a la imagen con el tag correspondiente
                     kubectl set image \
                         --context ${TARGET_ENV} \
                         deployment/app-python \
-                        app-python=host.docker.internal:5000/app-python:${IMAGE_TAG} \
+                        app-python=host.docker.internal:5000/app-python:${APP_COMMIT_TAG} \
                         -n python
 
                     kubectl apply \
                         --context ${TARGET_ENV} \
                         -f manifests/k8s/${TARGET_ENV}/app-python-service.yaml
 
+                    # TRUCO: Forzar reinicio para asegurar que baje los últimos cambios si usas latest
+                    kubectl rollout restart deployment/app-python --context ${TARGET_ENV} -n python
+
                     kubectl annotate deployment/app-python \
                         --context ${TARGET_ENV} \
                         -n python \
-                        kubernetes.io/change-cause="Jenkins build #${BUILD_NUMBER} - commit ${IMAGE_TAG}" \
+                        kubernetes.io/change-cause="Jenkins build #${BUILD_NUMBER} - commit ${APP_COMMIT_TAG}" \
                         --overwrite
 
                     echo "Para ver la app, corre en tu terminal: minikube service app-python-service -n python -p ${TARGET_ENV} --url"
