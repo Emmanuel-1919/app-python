@@ -34,7 +34,7 @@ def index():
         <p>Commit: {cfg['commit']}</p>
         <p>Versión: {cfg['version']}</p>
         <p>Implementacion: {cfg['mensaje_deploy']}</p>
-        <p>Stack: Python + Flask</p>
+        <p>Stack: Python + Flask + esto ya se desplego con latest y con el jenkins a minikube</p>
     </body>
     </html>
     """
